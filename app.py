@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from keras.saving import load_model
-import pandas as pd
 
 from predict_TX.predict import predict
 from observed_TX_db import obs_init
