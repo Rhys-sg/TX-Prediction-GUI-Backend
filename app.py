@@ -15,11 +15,19 @@ load_dotenv()
 
 # Server setup and connection to frontend
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://tx-prediction-gui-frontend.onrender.com"}})
+CORS(app, resources={r"/*": {"origins": os.getenv('FRONTEND_URL')}})
 
 # Load model, observed TX database once during startup
 model = load_model(os.getenv('MODEL_PATH'))
 obs_init.create_tables()
+
+# Add CORS headers to all responses. Sometimes browsers can be strict with CORS policies. This explicitly sets the CORS headers
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', os.getenv('FRONTEND_URL'))
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # Makes prediction based on promoter sequence
 @app.route('/get_prediction', methods=['POST'])
