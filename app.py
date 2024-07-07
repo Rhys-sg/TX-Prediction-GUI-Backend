@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from keras.saving import load_model
+from dotenv import load_dotenv
+import os
 
 from predict_TX.predict import predict
 from observed_TX_db import obs_init
@@ -8,12 +10,15 @@ from observed_TX_db import obs_insert
 from observed_TX_db import obs_query
 from ligate_student_entries.ligate_insert import insert_to_csv
 
+# Load environment variables from .env file
+load_dotenv()
+
 # Server setup and connection to frontend
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3001"}})
+CORS(app, resources={r"/*": {"origins": os.getenv('FRONTEND_URL')}})
 
 # Load model, observed TX database once during startup
-model = load_model('predict_TX/model.keras')
+model = load_model(os.getenv('MODEL_PATH'))
 obs_init.create_tables()
 
 # Makes prediction based on promoter sequence
@@ -38,8 +43,8 @@ def insert_observed_TX():
         return jsonify({'success': 'True'})
     except Exception as e:
         return jsonify({'error': str(e)})
-        
-    
+     
+ 
 # Queries the observed TX database based on coding strand, averages the observed TX if there are more than one entry
 @app.route('/query_Oberved_TX', methods=['POST'])
 def query_Oberved_TX():
@@ -49,8 +54,8 @@ def query_Oberved_TX():
         return jsonify({'entries': entries})
     except Exception as e:
         return jsonify({'error': str(e)})
-    
-    
+ 
+ 
 # Adds new student ligation (coding and template strand) to the ligation_entries.csv file
 @app.route('/insert_simulated_ligation', methods=['POST'])
 def insert_simulated_ligation():
