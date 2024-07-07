@@ -1,5 +1,6 @@
 flask==3.0.3
 flask_cors==4.0.1
 keras==3.3.3
+tensorflow==2.16.1
 pandas==2.1.4
 numpy==1.26.4
