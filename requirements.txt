@@ -4,4 +4,4 @@ keras==3.3.3
 tensorflow==2.16.1
 pandas==2.1.4
 numpy==1.26.4
-dotenv==1.0.1
+dotenv==1.0.0
