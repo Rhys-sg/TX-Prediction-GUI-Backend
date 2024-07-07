@@ -15,7 +15,7 @@ load_dotenv()
 
 # Server setup and connection to frontend
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": os.getenv('FRONTEND_URL')}})
+CORS(app, resources={r"/*": {"origins": "https://tx-prediction-gui-frontend.onrender.com"}})
 
 # Load model, observed TX database once during startup
 model = load_model(os.getenv('MODEL_PATH'))
