@@ -8,6 +8,9 @@ from predict_TX.predict import predict
 from observed_TX_db import obs_init
 from observed_TX_db import obs_insert
 from observed_TX_db import obs_query
+from users_db import users_init
+from users_db import users_insert
+from users_db import users_query
 from ligate_student_entries.ligate_insert import insert_to_csv
 
 # Load environment variables from .env file
@@ -20,6 +23,7 @@ CORS(app, resources={r"/*": {"origins": os.getenv('FRONTEND_URL')}})
 # Load model, observed TX database once during startup
 model = load_model(os.getenv('MODEL_PATH'))
 obs_init.create_tables()
+users_init.create_tables()
 
 # Add CORS headers to all responses. Sometimes browsers can be strict with CORS policies. This explicitly sets the CORS headers
 @app.after_request
@@ -73,6 +77,28 @@ def insert_simulated_ligation():
         return jsonify({'success': 'True'})
     except Exception as e:
         return jsonify({'error': str(e)})
+
+# Handles student sign up and returns if the student has already has account
+@app.route('/handle_signup', methods=['POST'])
+def handle_signup():
+    try:
+        data = request.get_json()
+        successful = users_insert.register_user(data['fullName'], data['email'], data['password'])
+        return jsonify({'successful': successful})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+    
+
+# Handles student login and returns if the student has an account
+@app.route('/handle_login', methods=['POST'])
+def handle_login():
+    try:
+        data = request.get_json()
+        successful = users_query.login_user(data['email'], data['password'])
+        return jsonify({'successful': successful})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+    
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 1000))
