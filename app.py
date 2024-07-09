@@ -3,6 +3,7 @@ from flask_cors import CORS
 from keras.saving import load_model
 from dotenv import load_dotenv
 import os
+import io
 
 from predict_TX.predict import predict
 from observed_TX_db import obs_init
@@ -12,6 +13,8 @@ from users_db import users_init
 from users_db import users_insert
 from users_db import users_query
 from ligate_student_entries.ligate_insert import insert_to_csv
+from ligate_student_entries.ligate_query import query_from_csv
+from ligate_student_entries.ligate_download import download_csv
 
 # Load environment variables from .env file
 load_dotenv()
@@ -77,6 +80,33 @@ def insert_simulated_ligation():
         return jsonify({'success': 'True'})
     except Exception as e:
         return jsonify({'error': str(e)})
+
+
+# Returns the data from ligation_entries.csv in a parsable format
+@app.route('/query_simulated_ligation', methods=['POST'])
+def query_simulated_ligation():
+    try:
+        return jsonify({'studentLigations': query_from_csv('ligation_entries.csv')})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+    
+
+# Route to handle downloading student ligations as CSV
+@app.route('/download_student_ligations', methods=['POST'])
+def download_student_ligations():
+    try:
+        csv_data = download_csv('ligation_entries.csv')
+        return send_file(
+            io.BytesIO(csv_data),
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name='student_ligations.csv'
+        )
+    except FileNotFoundError as e:
+        return jsonify({'error': str(e)})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+    
 
 # Handles student sign up and returns if the student has already has account
 @app.route('/handle_signup', methods=['POST'])
