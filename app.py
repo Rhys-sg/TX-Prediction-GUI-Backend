@@ -99,6 +99,17 @@ def handle_login():
     except Exception as e:
         return jsonify({'error': str(e)})
     
+    
+# returns all valid email domains that are allowed to access GUI (a list in valid_domains.txt)
+@app.route('/get_valid_domain', methods=['POST'])
+def get_valid_domain():
+    try:
+        with open('valid_domains.txt', 'r') as file:
+            emails = file.readlines()
+        return jsonify({'emails': emails})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+        
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 1000))
