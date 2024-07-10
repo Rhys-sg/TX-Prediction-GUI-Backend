@@ -1,7 +1,7 @@
 import sqlite3
 import bcrypt
 
-def register_user(name, email, password):
+def register_user(first_name, last_name, email, password):
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
 
@@ -18,8 +18,8 @@ def register_user(name, email, password):
     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
     # Insert user into database
-    cursor.execute('INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)',
-                   (name, email, password_hash.decode('utf-8')))
+    cursor.execute('INSERT INTO users (first_name, last_name, email, password_hash) VALUES (?, ?, ?, ?)',
+                   (first_name, last_name, email, password_hash.decode('utf-8')))
     conn.commit()
 
     conn.close()

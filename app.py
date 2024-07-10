@@ -58,8 +58,8 @@ def insert_observed_TX():
         return jsonify({'success': 'True'})
     except Exception as e:
         return jsonify({'error': str(e)})
-     
- 
+        
+    
 # Queries the observed TX database based on coding strand, averages the observed TX if there are more than one entry
 @app.route('/query_Oberved_TX', methods=['POST'])
 def query_Oberved_TX():
@@ -69,8 +69,8 @@ def query_Oberved_TX():
         return jsonify({'entries': entries})
     except Exception as e:
         return jsonify({'error': str(e)})
- 
- 
+    
+    
 # Adds new student ligation (coding and template strand) to the ligation_entries.csv file
 @app.route('/insert_simulated_ligation', methods=['POST'])
 def insert_simulated_ligation():
@@ -80,7 +80,7 @@ def insert_simulated_ligation():
         return jsonify({'success': 'True'})
     except Exception as e:
         return jsonify({'error': str(e)})
-
+    
 
 # Returns the data from ligation_entries.csv in a parsable format
 @app.route('/query_simulated_ligation', methods=['POST'])
@@ -106,14 +106,14 @@ def download_student_ligations():
         return jsonify({'error': str(e)})
     except Exception as e:
         return jsonify({'error': str(e)})
-    
+
 
 # Handles student sign up and returns if the student has already has account
 @app.route('/handle_signup', methods=['POST'])
 def handle_signup():
     try:
         data = request.get_json()
-        successful = users_insert.register_user(data['fullName'], data['email'], data['password'])
+        successful = users_insert.register_user(data['firstName'], data['lastName'], data['email'], data['password'])
         return jsonify({'successful': successful})
     except Exception as e:
         return jsonify({'error': str(e)})
@@ -124,11 +124,10 @@ def handle_signup():
 def handle_login():
     try:
         data = request.get_json()
-        successful = users_query.login_user(data['email'], data['password'])
-        return jsonify({'successful': successful})
+        first_name, last_name = users_query.login_user(data['email'], data['password'])
+        return jsonify({'firstName': first_name, 'lastName': last_name})
     except Exception as e:
         return jsonify({'error': str(e)})
-    
     
 # returns all valid email domains that are allowed to access GUI (a list in valid_domains.txt)
 @app.route('/get_valid_domain', methods=['POST'])
@@ -139,8 +138,6 @@ def get_valid_domain():
         return jsonify({'emails': emails})
     except Exception as e:
         return jsonify({'error': str(e)})
-        
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 1000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)

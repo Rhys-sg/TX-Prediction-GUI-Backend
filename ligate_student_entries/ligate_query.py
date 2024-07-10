@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import json
 
 def query_from_csv(file):
     # Check if the file exists and is not empty
