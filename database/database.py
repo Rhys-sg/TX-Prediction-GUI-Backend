@@ -3,6 +3,36 @@ import bcrypt
 import os
 import time
 
+"""
+Database Class for Managing Users, Schools, and Observed Transcription Rates after Ligations
+
+This class provides an interface for interacting with a PostgreSQL database that stores information related to schools, terms, ligation orders, user accounts, and observations. It includes methods for creating tables, inserting and querying data, and handling common database operations with retry logic.
+
+Key Features:
+- Initializes the database connection and creates necessary tables.
+- Provides methods to insert and query schools, terms, ligation orders, user accounts, and observations.
+- Utilizes retry logic for handling transient database errors.
+- Supports password hashing for secure account management.
+
+Dependencies:
+- psycopg2: PostgreSQL adapter for Python.
+- bcrypt: Library for password hashing.
+- os: For environment variable access.
+- time: For handling retry delays.
+
+Usage:
+- Create an instance of the class by passing the database URL to the constructor.
+- Use methods like `insert_school`, `query_schools`, `insert_ligation_order`, etc., to interact with the database.
+- Call `close()` to close the database connection when done.
+
+Example:
+    db = Database(db_url)
+    db.insert_school('Example School', 'example.com')
+    schools = db.query_schools()
+    db.close()
+"""
+
+
 class Database:
     def __init__(self, db_url):
         self.db_url = db_url

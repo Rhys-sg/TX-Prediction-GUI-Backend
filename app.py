@@ -1,3 +1,46 @@
+"""
+Flask Application for TX Prediction and School Management
+
+This Flask application provides a web API for interacting with a PostgreSQL database and a Keras model. It supports operations related to school data, term management, ligation orders, user accounts, and predictions based on promoter sequences.
+
+Key Features:
+- Connects to a PostgreSQL database for storing and retrieving school-related data and user observations.
+- Loads a pre-trained Keras model for making predictions based on promoter sequences.
+- Handles CORS to allow cross-origin requests from a specified frontend URL.
+- Provides endpoints for adding and querying data related to schools, terms, ligation orders, observations, and user accounts.
+- Includes functionality for user sign-up, login, and domain validation.
+
+Dependencies:
+- Flask: Web framework for building the API.
+- Flask-CORS: For handling cross-origin requests.
+- Keras: For loading and using the machine learning model.
+- dotenv: For loading environment variables from a .env file.
+- psycopg2: PostgreSQL adapter for Python (used in the Database class).
+- predict_TX.predict: Custom module for prediction logic.
+- database.database: Custom module for database interactions.
+
+Endpoints:
+- /get_prediction: Returns a prediction based on a promoter sequence.
+- /query_schools: Retrieves a list of all schools.
+- /query_terms_by_school: Retrieves terms associated with a specific school.
+- /insert_observed_TX: Inserts a new observation into the database.
+- /query_Observed_TX: Retrieves the average observed TX for a specific sequence.
+- /insert_simulated_ligation: Inserts new simulated ligation orders into the database.
+- /query_simulated_ligation: Retrieves simulated ligation orders by school and term.
+- /handle_signup: Handles user sign-up and account creation.
+- /handle_login: Handles user login and authentication.
+- /get_valid_domain: Retrieves all valid email domains for sign-up.
+
+Usage:
+- Configure the environment variables in a .env file (e.g., MODEL_PATH, DATABASE_URL, FRONTEND_URL).
+- Start the Flask server to handle incoming API requests.
+
+Example:
+    if __name__ == '__main__':
+        populate_schools()
+        app.run(host='0.0.0.0', port=port)
+"""
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from keras.saving import load_model
