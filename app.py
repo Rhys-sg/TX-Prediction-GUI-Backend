@@ -32,7 +32,7 @@ def populate_schools():
     with open('domains.txt', 'r') as file:
         domains = file.readlines()
     for domain in domains:
-        db.insert_school(domain[:-4].lower(), domain)
+        db.insert_school(domain[:-4].capitalize(), domain)
 
 # Makes prediction based on promoter sequence
 @app.route('/get_prediction', methods=['POST'])
@@ -136,7 +136,7 @@ def handle_signup():
     try:
         data = request.get_json()
         success = db.insert_account(data['email'],
-                                       db.query_school_by_domain(data['domain'].lower()),
+                                       db.query_school_by_domain(data['domain']),
                                        data['firstName'],
                                        data['lastName'],
                                        data['password'])
