@@ -1,219 +1,200 @@
 import psycopg2
-from psycopg2 import sql
-from psycopg2.extras import RealDictCursor
+import bcrypt
+import os
+import time
 
 class Database:
     def __init__(self, db_url):
         self.db_url = db_url
-    
-    def create_tables(self):
-        """Create tables in the database if they do not exist."""
-        
-        # List of tables to check and their respective creation queries
-        tables_to_create = {
-            'schools': """
-                CREATE TABLE schools (
-                    id SERIAL PRIMARY KEY,
-                    name VARCHAR(255) UNIQUE NOT NULL,
-                    domain VARCHAR(255) UNIQUE NOT NULL
-                );
-            """,
-            'accounts': """
-                CREATE TABLE accounts (
-                    id SERIAL PRIMARY KEY,
-                    email VARCHAR(255) UNIQUE NOT NULL,
-                    school_id INTEGER NOT NULL,
-                    first_name VARCHAR(255),
-                    last_name VARCHAR(255),
-                    password VARCHAR(255),
-                    FOREIGN KEY (school_id) REFERENCES schools(id)
-                );
-            """,
-            'observations': """
-                CREATE TABLE observations (
-                    id SERIAL PRIMARY KEY,
-                    coding_strand TEXT NOT NULL,
-                    account_email VARCHAR(255) NOT NULL,
-                    observed_tx FLOAT NOT NULL,
-                    students TEXT,
-                    notes TEXT,
-                    date DATE,
-                    FOREIGN KEY (account_email) REFERENCES accounts(email)
-                );
-            """,
-            'ligations': """
-                CREATE TABLE ligations (
-                    id SERIAL PRIMARY KEY,
-                    school VARCHAR(255) NOT NULL,
-                    term VARCHAR(255) NOT NULL,
-                    order_name VARCHAR(255) NOT NULL,
-                    sequence TEXT NOT NULL,
-                    date DATE NOT NULL,
-                    students TEXT
-                );
-            """
-        }
-        
-        with self.conn.cursor() as cursor:
-            for table_name, create_query in tables_to_create.items():
-                # Check if the table already exists
-                cursor.execute("""
-                    SELECT EXISTS (
-                        SELECT FROM information_schema.tables 
-                        WHERE table_name = %s
-                    );
-                """, (table_name,))
-                
-                # Fetch result
-                exists = cursor.fetchone()[0]
-                
-                # Create table if it does not exist
-                if not exists:
-                    cursor.execute(create_query)
-                    print(f"Table '{table_name}' created.")
-                else:
-                    print(f"Table '{table_name}' already exists.")
+        self.conn = psycopg2.connect(self.db_url)
+        self.create_tables()
 
-            # Commit changes to the database
+    def create_tables(self):
+        with self.conn.cursor() as cursor:
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS school (
+                name TEXT PRIMARY KEY,
+                domain TEXT UNIQUE
+            )''')
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS term (
+                id SERIAL PRIMARY KEY,
+                name TEXT,
+                school TEXT,
+                FOREIGN KEY(school) REFERENCES school(name)
+            )''')
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS ligation_orders (
+                id SERIAL PRIMARY KEY,
+                term_id INTEGER,
+                order_name TEXT,
+                sequence TEXT,
+                date TEXT,
+                students TEXT,
+                FOREIGN KEY(term_id) REFERENCES term(id)
+            )''')
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS accounts (
+                email TEXT PRIMARY KEY,
+                school TEXT,
+                first_name TEXT,
+                last_name TEXT,
+                password TEXT,
+                FOREIGN KEY(school) REFERENCES school(name)
+            )''')
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS observations (
+                observations_id SERIAL PRIMARY KEY,
+                sequence TEXT,
+                account_email TEXT,
+                observed_TX INTEGER,
+                students TEXT,
+                notes TEXT,
+                date TEXT,
+                FOREIGN KEY(account_email) REFERENCES accounts(email)
+            )''')
             self.conn.commit()
 
+    def close(self):
+        self.conn.close()
 
-    def connect(self):
-        """
-        Establishes a connection to the PostgreSQL database.
-        """
-        return psycopg2.connect(self.db_url)
-
-    def query_domains(self):
-        """
-        Queries all domains from the 'schools' table.
-        """
-        with self.connect() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT domain FROM schools")
-                results = cursor.fetchall()
-        return [row[0] for row in results]
+    def execute_with_retry(self, query, params=(), retries=5):
+        for attempt in range(retries):
+            try:
+                with self.conn.cursor() as cursor:
+                    cursor.execute(query, params)
+                    self.conn.commit()
+                    return cursor
+            except psycopg2.OperationalError as e:
+                if "database is locked" in str(e):  # PostgreSQL doesn't have this issue, so adjust as needed
+                    time.sleep(0.1)  # Wait a bit before retrying
+                else:
+                    raise
+        raise psycopg2.OperationalError("database is locked")
 
     def insert_school(self, name, domain):
-        """
-        Inserts a new school into the 'schools' table.
-        """
-        with self.connect() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("INSERT INTO schools (name, domain) VALUES (%s, %s)", (name, domain))
-                conn.commit()
+        try:
+            self.execute_with_retry('INSERT INTO school (name, domain) VALUES (%s, %s)', (name, domain))
+            return True
+        except psycopg2.IntegrityError:
+            return False
+
+    def query_schools_domains(self):
+        cursor = self.execute_with_retry('SELECT name, domain FROM school')
+        return cursor.fetchall()
 
     def query_schools(self):
-        """
-        Queries all schools from the 'schools' table.
-        """
-        with self.connect() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute("SELECT * FROM schools")
-                results = cursor.fetchall()
-        return results
+        cursor = self.execute_with_retry('SELECT name FROM school')
+        results = cursor.fetchall()
+        return [row[0] for row in results]
+    
+    def query_domains(self):
+        cursor = self.execute_with_retry('SELECT domain FROM school')
+        results = cursor.fetchall()
+        return [row[0] for row in results]
 
+    def query_school_by_domain(self, domain):
+        cursor = self.execute_with_retry('SELECT name FROM school WHERE domain = %s', (domain,))
+        result = cursor.fetchone()
+        return result[0] if result else None
+
+    def insert_term(self, term_name, school_name):
+        # Check if the term already exists for the school
+        cursor = self.execute_with_retry('SELECT id FROM term WHERE name = %s AND school = %s', (term_name, school_name))
+        term_row = cursor.fetchone()
+        if term_row: return False
+        try:
+            self.execute_with_retry('INSERT INTO term (name, school) VALUES (%s, %s)', (term_name, school_name))
+            return True
+        except psycopg2.IntegrityError:
+            return False
+
+    
     def query_terms_by_school(self, school_name):
-        """
-        Queries terms by school from the 'terms' table based on school name.
-        """
-        with self.connect() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute("SELECT * FROM terms WHERE school_name = %s", (school_name,))
-                results = cursor.fetchall()
-        return results
+        cursor = self.execute_with_retry('SELECT name FROM term WHERE school = %s', (school_name,))
+        return [row[0] for row in cursor.fetchall()]
+    
+    def insert_ligation_order(self, school_name, term_name, order_name, sequence, date, students):
+        try:
+            cursor = self.execute_with_retry('SELECT id FROM term WHERE name = %s AND school = %s', (term_name, school_name))
+            term_row = cursor.fetchone()
+            
+            if term_row is None:
+                return False
+            
+            term_id = term_row[0]
+            
+            self.execute_with_retry('''
+                INSERT INTO ligation_orders (term_id, order_name, sequence, date, students)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (term_id, order_name, sequence, date, students))
+            
+            return True
+        
+        except psycopg2.IntegrityError:
+            return False
 
-    def insert_observation(self, coding_strand, account_email, observed_TX, students, notes, date_observed):
-        """
-        Inserts an observation into the 'observed_TX' table.
-        """
-        with self.connect() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO observed_TX (coding_strand, account_email, observed_TX, students, notes, date_observed) 
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """, (coding_strand, account_email, observed_TX, students, notes, date_observed))
-                conn.commit()
-        return True
-
-    def query_average_observed_TX_by_sequence(self, coding_strand):
-        """
-        Queries the average observed transcription by coding strand.
-        """
-        with self.connect() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    SELECT AVG(observed_TX) FROM observed_TX WHERE coding_strand = %s
-                """, (coding_strand,))
-                result = cursor.fetchone()
+    def query_ligation_orders_by_school_and_term(self, school_name, term_name):
+        cursor = self.execute_with_retry('''
+            SELECT lo.order_name, lo.sequence, lo.date, lo.students
+            FROM ligation_orders lo
+            INNER JOIN term t ON lo.term_id = t.id
+            WHERE t.name = %s AND t.school = %s
+        ''', (term_name, school_name))
+        return cursor.fetchall()
+    
+    def insert_account(self, email, school_name, first_name, last_name, password):
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        try:
+            self.execute_with_retry('''
+                INSERT INTO accounts (email, school, first_name, last_name, password)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (email, school_name, first_name, last_name, hashed_password))
+            return True
+        except psycopg2.IntegrityError:
+            return False
+    
+    def insert_observation(self, sequence, account_email, observed_TX, students, notes, date):
+        try:
+            self.execute_with_retry('''
+                INSERT INTO observations (sequence, account_email, observed_TX, students, notes, date)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            ''', (sequence, account_email, observed_TX, students, notes, date))
+            return True
+        except psycopg2.IntegrityError:
+            return False
+    
+    def query_observations_by_sequence(self, sequence):
+        cursor = self.execute_with_retry('''
+            SELECT account_email, observed_TX, students, notes, date
+            FROM observations
+            WHERE sequence = %s
+        ''', (sequence,))
+        return cursor.fetchall()
+    
+    def query_average_observed_TX_by_sequence(self, sequence):
+        cursor = self.execute_with_retry('SELECT AVG(observed_TX) FROM observations WHERE sequence = %s', (sequence,))
+        result = cursor.fetchone()
         return result[0] if result else None
 
-    def insert_ligation_order(self, school, term, order_name, sequence, date_ordered, students):
-        """
-        Inserts a ligation order into the 'ligation_orders' table.
-        """
-        with self.connect() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO ligation_orders (school, term, order_name, sequence, date_ordered, students) 
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """, (school, term, order_name, sequence, date_ordered, students))
-                conn.commit()
-        return True
-
-    def query_ligation_orders_by_school_and_term(self, school, term):
-        """
-        Queries ligation orders by school and term.
-        """
-        with self.connect() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute("""
-                    SELECT * FROM ligation_orders WHERE school = %s AND term = %s
-                """, (school, term))
-                results = cursor.fetchall()
-        return results
-
-    def insert_account(self, email, school, first_name, last_name, password):
-        """
-        Inserts a new account into the 'accounts' table.
-        """
-        with self.connect() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO accounts (email, school, first_name, last_name, password) 
-                    VALUES (%s, %s, %s, %s, %s)
-                """, (email, school, first_name, last_name, password))
-                conn.commit()
-        return True
-
+    
+    def query_accounts(self):
+        cursor = self.execute_with_retry('SELECT email, password FROM accounts')
+        return cursor.fetchall()
+    
     def login_account(self, email, password):
-        """
-        Verifies the account credentials for login.
-        """
-        with self.connect() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    SELECT EXISTS(SELECT 1 FROM accounts WHERE email = %s AND password = %s)
-                """, (email, password))
-                result = cursor.fetchone()
-        return result[0]
-
+        cursor = self.execute_with_retry('SELECT password FROM accounts WHERE email = %s', (email,))
+        result = cursor.fetchone()
+        if result is None: return False
+        stored_password = result[0]
+        return bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8'))
+    
     def query_first_name_by_email(self, email):
-        """
-        Queries the first name of the account holder by email.
-        """
-        with self.connect() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT first_name FROM accounts WHERE email = %s", (email,))
-                result = cursor.fetchone()
+        cursor = self.execute_with_retry('SELECT first_name FROM accounts WHERE email = %s', (email,))
+        result = cursor.fetchone()
         return result[0] if result else None
-
+        
     def query_last_name_by_email(self, email):
-        """
-        Queries the last name of the account holder by email.
-        """
-        with self.connect() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT last_name FROM accounts WHERE email = %s", (email,))
-                result = cursor.fetchone()
+        cursor = self.execute_with_retry('SELECT last_name FROM accounts WHERE email = %s', (email,))
+        result = cursor.fetchone()
         return result[0] if result else None
