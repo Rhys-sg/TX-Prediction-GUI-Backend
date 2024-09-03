@@ -173,7 +173,7 @@ if __name__ == '__main__':
     db = Database('database_test.db')
     db.delete_database()
     db = Database('database_test.db')
-    populate_schools()
-    
+    db.insert_school('whitman', 'whitman.edu')
+
     port = int(os.environ.get('PORT', 1000))
     app.run(host='0.0.0.0', port=port)
