@@ -1,20 +1,12 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, current_app
 from flask_cors import CORS
 from keras.saving import load_model
 from dotenv import load_dotenv
 import os
-import io
+from datetime import datetime
 
 from predict_TX.predict import predict
-from observed_TX_db import obs_init
-from observed_TX_db import obs_insert
-from observed_TX_db import obs_query
-from users_db import users_init
-from users_db import users_insert
-from users_db import users_query
-from ligate_student_entries.ligate_insert import insert_to_csv
-from ligate_student_entries.ligate_query import query_from_csv
-from ligate_student_entries.ligate_download import download_csv
+from database.database import Database
 
 # Load environment variables from .env file
 load_dotenv()
@@ -25,8 +17,7 @@ CORS(app, resources={r"/*": {"origins": os.getenv('FRONTEND_URL')}})
 
 # Load model, observed TX database once during startup
 model = load_model(os.getenv('MODEL_PATH'))
-obs_init.create_tables()
-users_init.create_tables()
+db = Database('database.db')
 
 # Add CORS headers to all responses. Sometimes browsers can be strict with CORS policies. This explicitly sets the CORS headers
 @app.after_request
@@ -35,6 +26,13 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
+
+# Populates the schools table in the database with the domains in domains.txt
+def populate_schools():
+    with open('domains.txt', 'r') as file:
+        domains = file.readlines()
+    for domain in domains:
+        db.insert_school(domain[:-4].capitalize(), domain)
 
 # Makes prediction based on promoter sequence
 @app.route('/get_prediction', methods=['POST'])
@@ -47,15 +45,38 @@ def get_prediction():
         return jsonify({'error': str(e)})
 
 
+# Queries all schools in the database
+@app.route('/query_schools', methods=['POST'])
+def query_schools():
+    try:
+        return jsonify({'schools': db.query_schools()})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+    
+
+# Queries all schools in the database
+@app.route('/query_terms_by_school', methods=['POST'])
+def query_terms_by_school():
+    try:
+        data = request.get_json()  
+        return jsonify({'terms': db.query_terms_by_school(data['school'])})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+
 # Adds new input to the observed TX database
 @app.route('/insert_observed_TX', methods=['POST'])
 def insert_observed_TX():
     try:
-        data = request.get_json()    
-        input_id = obs_insert.insert_main_data(data['codingStrand'], data['TX'], data['Notes'])
-        for student in data['students']:
-            obs_insert.insert_student(input_id, student['firstname'], student['lastname'], student['email'])
-        return jsonify({'success': 'True'})
+        data = request.get_json()
+        success = db.insert_observation(data['codingStrand'],
+                                        data['account_email'],
+                                        data['observed_TX'],
+                                        data['students'],
+                                        data['notes'],
+                                        datetime.now().date().strftime('%Y-%m-%d'))
+        print(f"Observed: {data['observed_TX']}")
+        return jsonify({'success': success})
     except Exception as e:
         return jsonify({'error': str(e)})
         
@@ -65,8 +86,8 @@ def insert_observed_TX():
 def query_Oberved_TX():
     try:
         data = request.get_json()
-        entries = obs_query.query_by_coding_strand(data['codingStrand'])
-        return jsonify({'entries': entries})
+        avererage_observed_TX = db.query_average_observed_TX_by_sequence(data['codingStrand'])
+        return jsonify({'avererage_observed_TX': avererage_observed_TX})
     except Exception as e:
         return jsonify({'error': str(e)})
     
@@ -76,34 +97,35 @@ def query_Oberved_TX():
 def insert_simulated_ligation():
     try:
         data = request.get_json()
-        insert_to_csv(data, 'ligation_entries.csv')
-        return jsonify({'success': 'True'})
+        coding_success = db.insert_ligation_order(data['school'],
+                                                  data['term'],
+                                                  data['orderName'] + '_coding',
+                                                  data['sequence'],
+                                                  datetime.now().date().strftime('%Y-%m-%d'),
+                                                  data['students'])
+        template_success = db.insert_ligation_order(data['school'],
+                                                    data['term'],
+                                                    data['orderName'] + '_template',
+                                                    get_complement(data['sequence']),
+                                                    datetime.now().date().strftime('%Y-%m-%d'),
+                                                    data['students'])
+        return jsonify({'success': coding_success and template_success})
     except Exception as e:
         return jsonify({'error': str(e)})
-    
+
+def get_complement(seq):
+    toReturn = ''
+    mapping = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
+    for char in seq:
+        toReturn += mapping[char]
+    return toReturn
 
 # Returns the data from ligation_entries.csv in a parsable format
 @app.route('/query_simulated_ligation', methods=['POST'])
 def query_simulated_ligation():
     try:
-        return jsonify({'studentLigations': query_from_csv('ligation_entries.csv')})
-    except Exception as e:
-        return jsonify({'error': str(e)})
-    
-
-# Route to handle downloading student ligations as CSV
-@app.route('/download_student_ligations', methods=['POST'])
-def download_student_ligations():
-    try:
-        csv_data = download_csv('ligation_entries.csv')
-        return send_file(
-            io.BytesIO(csv_data),
-            mimetype='text/csv',
-            as_attachment=True,
-            download_name='student_ligations.csv'
-        )
-    except FileNotFoundError as e:
-        return jsonify({'error': str(e)})
+        data = request.get_json()
+        return jsonify({'studentLigations': db.query_ligation_orders_by_school_and_term(data['school'], data['term'])})
     except Exception as e:
         return jsonify({'error': str(e)})
 
@@ -113,33 +135,41 @@ def download_student_ligations():
 def handle_signup():
     try:
         data = request.get_json()
-        successful = users_insert.register_user(data['firstName'], data['lastName'], data['email'], data['password'])
-        return jsonify({'successful': successful})
+        success = db.insert_account(data['email'],
+                                       db.query_school_by_domain(data['domain']),
+                                       data['firstName'],
+                                       data['lastName'],
+                                       data['password'])
+        return jsonify({'success': success})
     except Exception as e:
         return jsonify({'error': str(e)})
     
 
-# Handles student login and returns if the student has an account
+# Handles student login and returns if the student has an account, first name, and last name
 @app.route('/handle_login', methods=['POST'])
 def handle_login():
     try:
         data = request.get_json()
-        first_name, last_name = users_query.login_user(data['email'], data['password'])
-        return jsonify({'firstName': first_name, 'lastName': last_name})
+        success = db.login_account(data['email'], data['password'])
+        if success:
+            first_name = db.query_first_name_by_email(data['email'])
+            last_name = db.query_last_name_by_email(data['email'])
+        else:
+            first_name = None
+            last_name = None
+        return jsonify({'success': success, 'firstName': first_name, 'lastName': last_name})
     except Exception as e:
         return jsonify({'error': str(e)})
     
-# returns all valid email domains that are allowed to access GUI (a list in valid_domains.txt)
+    
+# returns all valid email domains that are allowed to access GUI (from a list in valid_domains.txt)
 @app.route('/get_valid_domain', methods=['POST'])
 def get_valid_domain():
     try:
-        with open('valid_domains.txt', 'r') as file:
-            emails = file.readlines()
-        return jsonify({'emails': emails})
+        return jsonify({'domains': db.query_domains()})
     except Exception as e:
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    # test
     port = int(os.environ.get('PORT', 1000))
     app.run(host='0.0.0.0', port=port)
