@@ -32,6 +32,7 @@ def populate_schools():
     with open('domains.txt', 'r') as file:
         domains = file.readlines()
     for domain in domains:
+        print(f'Inserting domain: {domain[:-4].capitalize()} with value {domain}')
         db.insert_school(domain[:-4].capitalize(), domain)
 
 # Makes prediction based on promoter sequence
@@ -161,10 +162,6 @@ def handle_login():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-# @app.route('/get_valid_domain', methods=['POST'])
-# def get_valid_domain():
-#     valid_domains = ["whitman.edu"]
-#     return jsonify({"emails": valid_domains})
     
 # returns all valid email domains that are allowed to access GUI (from a list in valid_domains.txt)
 @app.route('/get_valid_domain', methods=['POST'])
@@ -178,6 +175,7 @@ if __name__ == '__main__':
     db = Database('database.db')
     db.delete_database()
     db = Database('database.db')
+    populate_schools()  # Populate schools with domains
     db.insert_school('whitman', 'whitman.edu')
 
     port = int(os.environ.get('PORT', 1000))
