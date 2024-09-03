@@ -136,7 +136,7 @@ def handle_signup():
     try:
         data = request.get_json()
         success = db.insert_account(data['email'],
-                                       db.query_school_by_domain(data['domain']),
+                                       db.query_school_by_domain(data['domain'].lower()),
                                        data['firstName'],
                                        data['lastName'],
                                        data['password'])
@@ -167,7 +167,6 @@ def handle_login():
 def get_valid_domain():
     try:
         domains = db.query_domains()
-        print(f'Querying: {domains}')
         return jsonify({'domains': domains})
     except Exception as e:
         return jsonify({'error': str(e)})
