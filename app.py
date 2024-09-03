@@ -140,6 +140,7 @@ def handle_signup():
                                        data['firstName'],
                                        data['lastName'],
                                        data['password'])
+        print(success)
         return jsonify({'success': success})
     except Exception as e:
         return jsonify({'error': str(e)})
