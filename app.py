@@ -32,8 +32,8 @@ def populate_schools():
     with open('domains.txt', 'r') as file:
         domains = file.readlines()
     for domain in domains:
-        print(f'Inserting domain: {domain[:-4].capitalize()} with value {domain}')
-        db.insert_school(domain[:-4].capitalize(), domain)
+        print(f'Inserting domain: {domain[:-4].lower()} with value {domain}')
+        db.insert_school(domain[:-4].lower(), domain)
 
 # Makes prediction based on promoter sequence
 @app.route('/get_prediction', methods=['POST'])
