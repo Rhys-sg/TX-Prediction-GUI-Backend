@@ -161,23 +161,23 @@ def handle_login():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-@app.route('/get_valid_domain', methods=['POST'])
-def get_valid_domain():
-    valid_domains = ["whitman.edu"]
-    return jsonify({"emails": valid_domains})
-    
-# # returns all valid email domains that are allowed to access GUI (from a list in valid_domains.txt)
 # @app.route('/get_valid_domain', methods=['POST'])
 # def get_valid_domain():
-#     try:
-#         return jsonify({'domains': db.query_domains()})
-#     except Exception as e:
-#         return jsonify({'error': str(e)})
+#     valid_domains = ["whitman.edu"]
+#     return jsonify({"emails": valid_domains})
+    
+# returns all valid email domains that are allowed to access GUI (from a list in valid_domains.txt)
+@app.route('/get_valid_domain', methods=['POST'])
+def get_valid_domain():
+    try:
+        return jsonify({'domains': db.query_domains()})
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    db = Database('database_test.db')
+    db = Database('database.db')
     db.delete_database()
-    db = Database('database_test.db')
+    db = Database('database.db')
     db.insert_school('whitman', 'whitman.edu')
 
     port = int(os.environ.get('PORT', 1000))
