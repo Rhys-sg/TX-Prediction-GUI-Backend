@@ -15,6 +15,9 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": os.getenv('FRONTEND_URL')}})
 
+# Load model, observed TX database once during startup
+model = load_model(os.getenv('MODEL_PATH'))
+
 
 # Add CORS headers to all responses. Sometimes browsers can be strict with CORS policies. This explicitly sets the CORS headers
 @app.after_request
@@ -157,19 +160,21 @@ def handle_login():
         return jsonify({'success': success, 'firstName': first_name, 'lastName': last_name})
     except Exception as e:
         return jsonify({'error': str(e)})
-    
-    
-# returns all valid email domains that are allowed to access GUI (from a list in valid_domains.txt)
+
 @app.route('/get_valid_domain', methods=['POST'])
 def get_valid_domain():
-    try:
-        return jsonify({'domains': db.query_domains()})
-    except Exception as e:
-        return jsonify({'error': str(e)})
+    valid_domains = ["whitman.edu"]
+    return jsonify({"emails": valid_domains})
+    
+# # returns all valid email domains that are allowed to access GUI (from a list in valid_domains.txt)
+# @app.route('/get_valid_domain', methods=['POST'])
+# def get_valid_domain():
+#     try:
+#         return jsonify({'domains': db.query_domains()})
+#     except Exception as e:
+#         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    # Load model, observed TX database once during startup
-    model = load_model(os.getenv('MODEL_PATH'))
     db = Database('database_test.db')
     db.delete_database()
     db = Database('database_test.db')
