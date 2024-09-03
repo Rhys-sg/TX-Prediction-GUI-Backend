@@ -31,8 +31,10 @@ def after_request(response):
 def populate_schools():
     with open('domains.txt', 'r') as file:
         domains = file.readlines()
+    existing_domains = db.query_domains()
     for domain in domains:
-        db.insert_school(domain[:-4].capitalize(), domain)
+        if domain[:-4].capitalize() not in existing_domains:
+            db.insert_school(domain[:-4].capitalize(), domain)
 
 # Makes prediction based on promoter sequence
 @app.route('/get_prediction', methods=['POST'])
@@ -173,8 +175,6 @@ def get_valid_domain():
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    db = Database('database.db')
-    db.delete_database()
     db = Database('database.db')
     populate_schools()
 
