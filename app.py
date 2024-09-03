@@ -17,7 +17,11 @@ CORS(app, resources={r"/*": {"origins": os.getenv('FRONTEND_URL')}})
 
 # Load model, observed TX database once during startup
 model = load_model(os.getenv('MODEL_PATH'))
-db = Database('database.db')
+db = Database('database_test.db')
+db.delete_database()
+db = Database('database_test.db')
+db.populate_schools()
+
 
 # Add CORS headers to all responses. Sometimes browsers can be strict with CORS policies. This explicitly sets the CORS headers
 @app.after_request
@@ -171,6 +175,5 @@ def get_valid_domain():
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    populate_schools()
     port = int(os.environ.get('PORT', 1000))
     app.run(host='0.0.0.0', port=port)
