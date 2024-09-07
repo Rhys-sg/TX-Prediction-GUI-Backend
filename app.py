@@ -62,7 +62,7 @@ CORS(app, resources={r"/*": {"origins": os.getenv('FRONTEND_URL')}})
 model = load_model(os.getenv('MODEL_PATH'))
 
 # Instantiate the Database with the internal PostgreSQL database URL
-db = Database(os.getenv('DATABASE_URL'))
+db = DataBase(os.getenv('DATABASE_URL'))
 
 # Add CORS headers to all responses.
 @app.after_request

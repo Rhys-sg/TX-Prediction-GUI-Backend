@@ -16,7 +16,7 @@ class DataBase:
     def __init__(self, db_url):
         # Initialize the engine and session
         self.engine = create_engine(db_url)
-        Base.metadata.create_all(self.engine)  # Create the table if it doesn't exist
+        Base.metadata.create_all(self.engine)
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
 
