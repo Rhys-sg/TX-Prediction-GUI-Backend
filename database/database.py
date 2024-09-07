@@ -133,11 +133,12 @@ class DataBase:
     def insert_account(self, email, school_name, first_name, last_name, password):
 
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        school = self.query_account_by_email(email)
+        school = self.query_school_by_domain(email)
 
         # Check if the account already exists and if the domain is valid
         if self.query_account_by_email(email):
-            return 'Account already exists'
+            return f'TEST: Account {self.query_account_by_email(email)} already exists'
+            return 'TEST: Account already exists'
         if not school:
             return 'TEST: E-mail must have a valid domain'
         
