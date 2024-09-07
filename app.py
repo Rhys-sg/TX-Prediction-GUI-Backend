@@ -179,15 +179,14 @@ def query_simulated_ligation():
 def handle_signup():
     try:
         data = request.get_json()
-        success = db.insert_account(
+        error = db.insert_account(
             data['email'],
             db.query_school_by_domain(data['domain']),
             data['firstName'],
             data['lastName'],
             data['password']
         )
-        print(success)
-        return jsonify({'success': success})
+        return jsonify({'error': error})
     except Exception as e:
         return jsonify({'error': str(e)})
 

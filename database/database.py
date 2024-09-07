@@ -131,18 +131,24 @@ class DataBase:
         return self.session.query(LigationsOrder).filter_by(term_id=term.id).all()
 
     def insert_account(self, email, school_name, first_name, last_name, password):
+
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        school = self.session.query(School).filter_by(name=school_name).first()
+        school = self.query_account_by_email(email)
+
+        # Check if the account already exists and if the domain is valid
+        if self.query_account_by_email(email):
+            return 'Account already exists'
         if not school:
-            return False
+            return 'TEST: E-mail must have a valid domain'
+        
         try:
             new_account = Account(email=email, school_id=school.id, first_name=first_name, last_name=last_name, password=hashed_password)
             self.session.add(new_account)
             self.session.commit()
-            return True
+            return None
         except Exception as e:
             self.session.rollback()
-            return False
+            return f'An exception occured, {str(e)}'
 
     def insert_observation(self, sequence, account_email, observed_TX, students, notes, date):
         try:
@@ -163,6 +169,9 @@ class DataBase:
 
     def query_accounts(self):
         return self.session.query(Account.email, Account.password).all()
+    
+    def query_account_by_email(self, email):
+        return self.session.query(Account).filter_by(email=email).first()
 
     def login_account(self, email, password):
         account = self.session.query(Account).filter_by(email=email).first()
