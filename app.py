@@ -42,8 +42,8 @@ Example:
 """
 
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-from keras.saving import load_model
+from flask_cors import CORS # type: ignore
+from keras.saving import load_model # type: ignore
 from dotenv import load_dotenv
 import os
 from datetime import datetime
