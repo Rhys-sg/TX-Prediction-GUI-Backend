@@ -1,3 +1,1 @@
 whitman.edu
-test.edu
-test1.edu
