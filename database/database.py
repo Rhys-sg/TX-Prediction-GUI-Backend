@@ -64,6 +64,8 @@ class DataBase:
         self.session = Session()
 
     def insert_school(self, name, domain):
+        name = name.lower()
+        domain = domain.lower()
         try:
             new_school = School(name=name, domain=domain)
             self.session.add(new_school)
@@ -83,10 +85,13 @@ class DataBase:
         return [school.domain for school in self.session.query(School).all()]
 
     def query_school_by_domain(self, domain):
+        domain = domain.lower()
         school = self.session.query(School).filter_by(domain=domain).first()
         return school.name if school else None
 
     def insert_term(self, term_name, school_name):
+        term_name = term_name.lower()
+        school_name = school_name.lower()
         school = self.session.query(School).filter_by(name=school_name).first()
         if not school:
             return False
@@ -100,12 +105,16 @@ class DataBase:
             return False
 
     def query_terms_by_school(self, school_name):
+        school_name = school_name.lower()
         school = self.session.query(School).filter_by(name=school_name).first()
         if not school:
             return []
         return [term.name for term in self.session.query(Term).filter_by(school_id=school.id).all()]
 
     def insert_ligation_order(self, school_name, term_name, order_name, sequence, date, students):
+        school_name = school_name.lower()
+        term_name = term_name.lower()
+        order_name = order_name.lower()
         school = self.session.query(School).filter_by(name=school_name).first()
         if not school:
             return False
@@ -122,6 +131,8 @@ class DataBase:
             return False
 
     def query_ligation_orders_by_school_and_term(self, school_name, term_name):
+        school_name = school_name.lower()
+        term_name = term_name.lower()
         school = self.session.query(School).filter_by(name=school_name).first()
         if not school:
             return []
@@ -131,13 +142,19 @@ class DataBase:
         return self.session.query(LigationsOrder).filter_by(term_id=term.id).all()
 
     def insert_account(self, email, domain, first_name, last_name, password):
+        email = email.lower()
+        domain = domain.lower()
+        first_name = first_name.lower()
+        last_name = last_name.lower()
 
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         school = self.query_school_by_domain(domain)
 
-        # Check if the account already exists and if the domain is valid
+        # Check if the account already exists
         if self.query_account_by_email(email):
             return 'TEST: Account already exists'
+        
+        # Check if the domain is valid
         if not school:
             return 'TEST: E-mail must have a valid domain'
         
@@ -148,9 +165,13 @@ class DataBase:
             return None
         except Exception as e:
             self.session.rollback()
-            return f'An exception occured, {str(e)}'
+            return f'An exception occurred, {str(e)}'
 
     def insert_observation(self, sequence, account_email, observed_TX, students, notes, date):
+        sequence = sequence.lower()
+        account_email = account_email.lower()
+        students = students.lower()
+        notes = notes.lower()
         try:
             new_observation = Observation(sequence=sequence, account_email=account_email, observed_TX=observed_TX, students=students, notes=notes, date=date)
             self.session.add(new_observation)
@@ -161,9 +182,11 @@ class DataBase:
             return False
 
     def query_observations_by_sequence(self, sequence):
+        sequence = sequence.lower()
         return self.session.query(Observation).filter_by(sequence=sequence).all()
     
     def query_average_observed_TX_by_sequence(self, sequence):
+        sequence = sequence.lower()
         result = self.session.query(func.avg(Observation.observed_TX)).filter_by(sequence=sequence).scalar()
         return result
 
@@ -171,9 +194,11 @@ class DataBase:
         return self.session.query(Account.email, Account.password).all()
     
     def query_account_by_email(self, email):
+        email = email.lower()
         return self.session.query(Account).filter_by(email=email).first()
 
     def login_account(self, email, password):
+        email = email.lower()
         account = self.session.query(Account).filter_by(email=email).first()
         if account is None:
             return False
@@ -181,10 +206,12 @@ class DataBase:
         return bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8'))
 
     def query_first_name_by_email(self, email):
+        email = email.lower()
         account = self.session.query(Account).filter_by(email=email).first()
         return account.first_name if account else None
 
     def query_last_name_by_email(self, email):
+        email = email.lower()
         account = self.session.query(Account).filter_by(email=email).first()
         return account.last_name if account else None
     

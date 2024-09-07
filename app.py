@@ -47,6 +47,7 @@ from keras.saving import load_model # type: ignore
 from dotenv import load_dotenv
 import os
 from datetime import datetime
+import pandas as pd
 
 from predict_TX.predict import predict
 from database.database import DataBase
@@ -74,12 +75,9 @@ def after_request(response):
 
 # Populates the schools table in the database with the domains in domains.txt
 def populate_schools():
-    with open('domains.txt', 'r') as file:
-        domains = file.readlines()
-    existing_domains = db.query_domains()
-    for domain in domains:
-        if domain.strip().capitalize() not in existing_domains:
-            db.insert_school(domain.strip().capitalize(), domain.strip())
+    schools = pd.read_csv('schools.csv')
+    for index, row in schools.iterrows():
+        db.insert_school(row['name'].strip(), row['domain'].strip())
 
 # Makes prediction based on promoter sequence
 @app.route('/get_prediction', methods=['POST'])
