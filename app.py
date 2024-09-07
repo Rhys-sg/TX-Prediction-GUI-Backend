@@ -215,5 +215,4 @@ if __name__ == '__main__':
     # DO NOT KEEP
 
     populate_schools()
-    port = int(os.environ.get('PORT', 1000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=1000)
