@@ -49,7 +49,7 @@ import os
 from datetime import datetime
 
 from predict_TX.predict import predict
-from database.database import Database
+from database.database import DataBase
 
 # Load environment variables from .env file
 load_dotenv()
