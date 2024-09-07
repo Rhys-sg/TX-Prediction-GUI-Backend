@@ -130,14 +130,14 @@ class DataBase:
             return []
         return self.session.query(LigationsOrder).filter_by(term_id=term.id).all()
 
-    def insert_account(self, email, school_name, first_name, last_name, password):
+    def insert_account(self, email, domain, first_name, last_name, password):
 
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        school = self.query_school_by_domain(email)
+        school = self.query_school_by_domain(domain)
 
         # Check if the account already exists and if the domain is valid
-        if self.query_account_by_email(email):
-            return f'TEST: Account {self.query_account_by_email(email)} already exists'
+        if self.query_account_by_email(domain):
+            return f'TEST: Account {self.query_account_by_email(domain)} already exists'
             return 'TEST: Account already exists'
         if not school:
             return 'TEST: E-mail must have a valid domain'
