@@ -137,7 +137,6 @@ class DataBase:
 
         # Check if the account already exists and if the domain is valid
         if self.query_account_by_email(email):
-            return f'TEST: Account {self.query_account_by_email(email)} already exists'
             return 'TEST: Account already exists'
         if not school:
             return 'TEST: E-mail must have a valid domain'
@@ -188,6 +187,17 @@ class DataBase:
     def query_last_name_by_email(self, email):
         account = self.session.query(Account).filter_by(email=email).first()
         return account.last_name if account else None
+    
+    def reset_database(self):
+        try:
+            # Drop all tables
+            Base.metadata.drop_all(self.engine)
+            # Recreate all tables
+            Base.metadata.create_all(self.engine)
+            return True
+        except Exception as e:
+            print(f"An exception occurred while resetting the database: {str(e)}")
+            return False
 
     def close(self):
         self.session.close()
