@@ -136,8 +136,8 @@ class DataBase:
         school = self.query_school_by_domain(domain)
 
         # Check if the account already exists and if the domain is valid
-        if self.query_account_by_email(domain):
-            return f'TEST: Account {self.query_account_by_email(domain)} already exists'
+        if self.query_account_by_email(email):
+            return f'TEST: Account {self.query_account_by_email(email)} already exists'
             return 'TEST: Account already exists'
         if not school:
             return 'TEST: E-mail must have a valid domain'
