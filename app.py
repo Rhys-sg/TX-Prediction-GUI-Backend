@@ -206,7 +206,7 @@ def handle_login():
 def get_valid_domain():
     try:
         domains = db.query_domains()
-        return jsonify({'domains': domains})
+        return jsonify({'connection': True, 'domains': domains})
     except Exception as e:
         return jsonify({'error': str(e)})
 
