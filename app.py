@@ -51,29 +51,12 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": os.getenv('FRONTEND_URL')}})
 
-
-
-
-
-
 # Load model, observed TX database once during startup
-@app.before_first_request
-def setup():
-    global db
-    db = DataBase(os.getenv('DATABASE_URL'))
-    db.delete_all_tables() 
-    populate_schools()
+model = load_model(os.getenv('MODEL_PATH'))
 
-    global model
-    model = load_model(os.getenv('MODEL_PATH'))
-    print("Connected to the database.")
+# Instantiate the Database with the internal PostgreSQL database URL
+db = DataBase(os.getenv('DATABASE_URL'))
 
-# Close the database connection when the app shuts down
-@app.teardown_appcontext
-def teardown(exception=None):
-    if db:
-        db.close()
-        print("Closed the database connection.")
 
 # Populates the schools table in the database with the domains in domains.txt
 def populate_schools():
@@ -211,4 +194,10 @@ def get_valid_domain():
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
+    
+    # DO NOT KEEP
+    db.delete_all_tables() 
+    # DO NOT KEEP
+
+    populate_schools()
     app.run(host='0.0.0.0', port=1000)
