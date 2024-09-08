@@ -40,6 +40,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 import pandas as pd
+from sqlalchemy import create_engine, text
 
 from predict_TX.predict import predict
 from database.database import DataBase
@@ -57,6 +58,23 @@ model = load_model(os.getenv('MODEL_PATH'))
 # Instantiate the Database with the internal PostgreSQL database URL
 db = DataBase(os.getenv('DATABASE_URL'))
 
+# Connect to the database engine
+engine = create_engine(os.getenv('DATABASE_URL'))
+
+# Function to check and add the 'school_name' column if it doesn't exist
+def ensure_school_name_column():
+    with engine.connect() as connection:
+        result = connection.execute(text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'accounts' AND column_name = 'school_name'
+        """))
+        columns = [row['column_name'] for row in result]
+        if 'school_name' not in columns:
+            connection.execute(text("ALTER TABLE accounts ADD COLUMN school_name VARCHAR"))
+            print("Column 'school_name' added to 'accounts' table.")
+        else:
+            print("Column 'school_name' already exists in 'accounts' table.")
 
 # Populates the schools table in the database with the domains in domains.txt
 def populate_schools():
@@ -194,6 +212,8 @@ def get_valid_domain():
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
+    # Ensure 'school_name' column exists in 'accounts' table
+    ensure_school_name_column()
     
     # DO NOT KEEP
     db.delete_all_tables() 

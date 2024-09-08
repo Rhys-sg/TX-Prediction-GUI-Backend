@@ -222,12 +222,3 @@ class DataBase:
                 self.delete_all_rows(model)
         except Exception as e:
             print(f"Error occurred while clearing tables: {e}")
-
-    def delete_all_rows(self, model):
-        try:
-            self.session.query(model).delete()
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-        finally:
-            self.session.close()
