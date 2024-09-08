@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, Column, String, Integer, Text, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.sql import func
+from sqlalchemy import inspect
 import bcrypt
 
 # Define the base model for SQLAlchemy
@@ -218,5 +219,11 @@ class DataBase:
     def close(self):
         self.session.close()
 
-    def drop_all_tables(self):
-        Base.metadata.drop_all(self.engine)
+    def drop_all_tables_manually(self):
+        inspector = inspect(self.engine)
+        tables = inspector.get_table_names()
+
+        # Drop tables in reverse order to avoid constraint issues
+        for table in reversed(tables):
+            print(f"Dropping table: {table}")
+            self.engine.execute(f"DROP TABLE IF EXISTS {table} CASCADE")

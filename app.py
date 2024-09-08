@@ -11,15 +11,6 @@ Key Features:
 - Provides endpoints for adding and querying data related to schools, terms, ligation orders, observations, and user accounts.
 - Includes functionality for user sign-up, login, and domain validation.
 
-Dependencies:
-- Flask: Web framework for building the API.
-- Flask-CORS: For handling cross-origin requests.
-- Keras: For loading and using the machine learning model.
-- dotenv: For loading environment variables from a .env file.
-- psycopg2: PostgreSQL adapter for Python (used in the Database class).
-- predict_TX.predict: Custom module for prediction logic.
-- database.database: Custom module for database interactions.
-
 Endpoints:
 - /get_prediction: Returns a prediction based on a promoter sequence.
 - /query_schools: Retrieves a list of all schools.
@@ -212,7 +203,7 @@ def get_valid_domain():
 if __name__ == '__main__':
     
     # DO NOT KEEP
-    db.drop_all_tables() 
+    db.drop_all_tables_manually() 
     # DO NOT KEEP
 
     populate_schools()
