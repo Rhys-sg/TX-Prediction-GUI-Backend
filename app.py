@@ -218,4 +218,4 @@ if __name__ == '__main__':
     # DO NOT KEEP
 
     populate_schools()
-    app.run(host='0.0.0.0', port=1000)
+    app.run(host='0.0.0.0')
