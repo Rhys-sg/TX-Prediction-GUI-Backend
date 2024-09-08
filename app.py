@@ -1,7 +1,10 @@
 """
 Flask Application for TX Prediction and School Management
 
-This Flask application provides a web API for interacting with a PostgreSQL database and a Keras model. It supports operations related to school data, term management, ligation orders, user accounts, and predictions based on promoter sequences.
+This Flask application provides a web API for interacting with a PostgreSQL database and a Keras model.
+It supports operations related to school data, term management, ligation orders, user accounts, and predictions based on promoter sequences.
+
+It uses gunicorn for running the Flask application, which is a Python Web Server Gateway Interface HTTP server.
 
 Key Features:
 - Connects to a PostgreSQL database for storing and retrieving school-related data and user observations.
@@ -211,7 +214,7 @@ def get_valid_domain():
 if __name__ == '__main__':
     
     # DO NOT KEEP
-    db.reset_database() 
+    db.drop_all_tables() 
     # DO NOT KEEP
 
     populate_schools()

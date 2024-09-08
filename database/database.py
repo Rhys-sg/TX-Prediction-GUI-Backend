@@ -214,17 +214,9 @@ class DataBase:
         email = email.lower()
         account = self.session.query(Account).filter_by(email=email).first()
         return account.last_name if account else None
-    
-    def reset_database(self):
-        try:
-            # Drop all tables
-            Base.metadata.drop_all(self.engine)
-            # Recreate all tables
-            Base.metadata.create_all(self.engine)
-            return True
-        except Exception as e:
-            print(f"An exception occurred while resetting the database: {str(e)}")
-            return False
 
     def close(self):
         self.session.close()
+
+    def drop_all_tables(self):
+        Base.metadata.drop_all(self.engine)
