@@ -218,13 +218,29 @@ class DataBase:
 
     def close(self):
         self.session.close()
+    
+    def delete_all_rows(self, model):
+        try:
+            self.session.query(model).delete()
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+        finally:
+            self.session.close()
 
-    def drop_all_tables_manually(self):
-        # Get all table objects
-        tables = reversed(Base.metadata.sorted_tables)
+    def delete_all_tables(self):
+        models = [School, Term, LigationsOrder, Account, Observation]
+        try:
+            for model in models:
+                self.delete_all_rows(model)
+        except Exception as e:
+            print(f"Error occurred while clearing tables: {e}")
 
-        # Drop tables in the correct order
-        with self.engine.connect() as connection:
-            for table in tables:
-                print(f"Dropping table: {table.name}")
-                table.drop(connection)
+    def delete_all_rows(self, model):
+        try:
+            self.session.query(model).delete()
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+        finally:
+            self.session.close()
