@@ -2,7 +2,6 @@ from sqlalchemy import create_engine, Column, String, Integer, Text, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.sql import func
-from sqlalchemy import inspect
 import bcrypt
 
 # Define the base model for SQLAlchemy
@@ -11,24 +10,22 @@ Base = declarative_base()
 class School(Base):
     __tablename__ = 'schools'
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False, unique=True)
+    name = Column(String, primary_key=True, nullable=False, unique=True)
     domain = Column(String, nullable=False, unique=True)
 
 class Term(Base):
     __tablename__ = 'terms'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    school_id = Column(Integer, ForeignKey('schools.id'), nullable=False)
+    name = Column(String, primary_key=True, nullable=False)
+    school_name = Column(String, ForeignKey('schools.name'), nullable=False)
     school = relationship("School")
 
 class LigationsOrder(Base):
     __tablename__ = 'ligation_orders'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    term_id = Column(Integer, ForeignKey('terms.id'), nullable=False)
-    order_name = Column(String)
+    term_name = Column(String, ForeignKey('terms.name'), primary_key=True, nullable=False)
+    school_name = Column(String, ForeignKey('schools.name'), nullable=False)
+    order_name = Column(String, primary_key=True, nullable=False)
     sequence = Column(Text)
     date = Column(String)
     students = Column(Text)
@@ -38,7 +35,7 @@ class Account(Base):
     __tablename__ = 'accounts'
 
     email = Column(String, primary_key=True)
-    school_id = Column(Integer, ForeignKey('schools.id'))
+    school_name = Column(String, ForeignKey('schools.name'))
     first_name = Column(String)
     last_name = Column(String)
     password = Column(String)
@@ -47,8 +44,7 @@ class Account(Base):
 class Observation(Base):
     __tablename__ = 'observations'
 
-    observations_id = Column(Integer, primary_key=True, autoincrement=True)
-    sequence = Column(Text)
+    sequence = Column(Text, primary_key=True)
     account_email = Column(String, ForeignKey('accounts.email'))
     observed_TX = Column(Integer)
     students = Column(Text)
@@ -97,7 +93,7 @@ class DataBase:
         if not school:
             return False
         try:
-            new_term = Term(name=term_name, school_id=school.id)
+            new_term = Term(name=term_name, school_name=school_name)
             self.session.add(new_term)
             self.session.commit()
             return True
@@ -107,10 +103,7 @@ class DataBase:
 
     def query_terms_by_school(self, school_name):
         school_name = school_name.lower()
-        school = self.session.query(School).filter_by(name=school_name).first()
-        if not school:
-            return []
-        return [term.name for term in self.session.query(Term).filter_by(school_id=school.id).all()]
+        return [term.name for term in self.session.query(Term).filter_by(school_name=school_name).all()]
 
     def insert_ligation_order(self, school_name, term_name, order_name, sequence, date, students):
         school_name = school_name.lower()
@@ -119,11 +112,11 @@ class DataBase:
         school = self.session.query(School).filter_by(name=school_name).first()
         if not school:
             return False
-        term = self.session.query(Term).filter_by(name=term_name, school_id=school.id).first()
+        term = self.session.query(Term).filter_by(name=term_name, school_name=school_name).first()
         if not term:
             return False
         try:
-            new_order = LigationsOrder(term_id=term.id, order_name=order_name, sequence=sequence, date=date, students=students)
+            new_order = LigationsOrder(term_name=term_name, school_name=school_name, order_name=order_name, sequence=sequence, date=date, students=students)
             self.session.add(new_order)
             self.session.commit()
             return True
@@ -134,13 +127,7 @@ class DataBase:
     def query_ligation_orders_by_school_and_term(self, school_name, term_name):
         school_name = school_name.lower()
         term_name = term_name.lower()
-        school = self.session.query(School).filter_by(name=school_name).first()
-        if not school:
-            return []
-        term = self.session.query(Term).filter_by(name=term_name, school_id=school.id).first()
-        if not term:
-            return []
-        return self.session.query(LigationsOrder).filter_by(term_id=term.id).all()
+        return self.session.query(LigationsOrder).filter_by(school_name=school_name, term_name=term_name).all()
 
     def insert_account(self, email, domain, first_name, last_name, password):
         email = email.lower()
@@ -149,18 +136,18 @@ class DataBase:
         last_name = last_name.lower()
 
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        school = self.query_school_by_domain(domain)
+        school_name = self.query_school_by_domain(domain)
 
         # Check if the account already exists
         if self.query_account_by_email(email):
             return 'TEST: Account already exists'
         
         # Check if the domain is valid
-        if not school:
+        if not school_name:
             return 'TEST: E-mail must have a valid domain'
         
         try:
-            new_account = Account(email=email, school_id=school.id, first_name=first_name, last_name=last_name, password=hashed_password)
+            new_account = Account(email=email, school_name=school_name, first_name=first_name, last_name=last_name, password=hashed_password)
             self.session.add(new_account)
             self.session.commit()
             return None
