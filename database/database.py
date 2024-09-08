@@ -220,10 +220,11 @@ class DataBase:
         self.session.close()
 
     def drop_all_tables_manually(self):
-        inspector = inspect(self.engine)
-        tables = inspector.get_table_names()
+        # Get all table objects
+        tables = reversed(Base.metadata.sorted_tables)
 
-        # Drop tables in reverse order to avoid constraint issues
-        for table in reversed(tables):
-            print(f"Dropping table: {table}")
-            self.engine.execute(f"DROP TABLE IF EXISTS {table} CASCADE")
+        # Drop tables in the correct order
+        with self.engine.connect() as connection:
+            for table in tables:
+                print(f"Dropping table: {table.name}")
+                table.drop(connection)
