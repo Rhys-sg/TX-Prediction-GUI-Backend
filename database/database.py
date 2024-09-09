@@ -127,13 +127,21 @@ class DataBase:
     def query_ligation_orders_by_school_and_term(self, school_name, term_name):
         school_name = school_name.lower()
         term_name = term_name.lower()
-        if not self.session.query(School).filter_by(name=school_name).first():
-            return {'error': f'School {school_name} does not exist'}
-        if not self.session.query(Term).filter_by(name=term_name, school_name=school_name).first():
-            return {'error': f'Term {term_name} does not exist'}
-        
+
         student_ligations = self.session.query(LigationsOrder).filter_by(school_name=school_name, term_name=term_name).all()
-        return {'studentLigations' : student_ligations}
+
+        # Convert the results to a list of dictionaries
+        ligations_list = [
+            {
+                'Order Name': ligation.order_name,
+                'Sequence': ligation.sequence,
+                'Date': ligation.date,
+                'Students': ligation.students
+            }
+            for ligation in student_ligations
+        ]
+
+        return {'studentLigations': ligations_list}
 
     def insert_account(self, email, domain, first_name, last_name, password):
         email = email.lower()
@@ -211,6 +219,23 @@ class DataBase:
 
     def close(self):
         self.session.close()
+    
+    def delete_all_rows(self, model):
+        try:
+            self.session.query(model).delete()
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+        finally:
+            self.session.close()
+
+    def delete_all_tables(self):
+        models = [School, Term, LigationsOrder, Account, Observation]
+        try:
+            for model in models:
+                self.delete_all_rows(model)
+        except Exception as e:
+            print(f"Error occurred while clearing tables: {e}")
 
     def reset_table(self, table_name):
         """

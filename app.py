@@ -228,7 +228,10 @@ def reset_database():
     - I can only delete tables and reset the schema by dropping the database and recreating it (in render)
 
     """
-    # Delete rows from all tables
+    # Not sure which one works
+
+    db.delete_all_rows()
+
     db.reset_table('schools')
     db.reset_table('terms')
     db.reset_table('ligations_orders')
