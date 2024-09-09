@@ -228,34 +228,3 @@ class DataBase:
             self.session.rollback()
         finally:
             self.session.close()
-
-    def delete_all_tables(self):
-        models = [School, Term, LigationsOrder, Account, Observation]
-        try:
-            for model in models:
-                self.delete_all_rows(model)
-        except Exception as e:
-            print(f"Error occurred while clearing tables: {e}")
-
-    def reset_table(self, table_name):
-        """
-        Delete all rows in the specified table.
-        Does not delete the table itself or change the schema.
-
-        """
-        try:
-            # Mapping table names to SQLAlchemy models
-            table_map = {
-                'schools': School,
-                'terms': Term,
-                'ligation_orders': LigationsOrder,
-                'accounts': Account,
-                'observations': Observation
-            }
-            model = table_map.get(table_name)
-            if not model:
-                raise ValueError(f"Table '{table_name}' does not exist.")
-            self.delete_all_rows(model)
-            print(f"Table '{table_name}' has been reset.")
-        except Exception as e:
-            print(f"Error occurred while resetting table '{table_name}': {e}")
