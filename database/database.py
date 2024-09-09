@@ -128,9 +128,9 @@ class DataBase:
         school_name = school_name.lower()
         term_name = term_name.lower()
         if not self.session.query(School).filter_by(name=school_name).first():
-            return {'error': 'School does not exist'}
+            return {'error': f'School {school_name} does not exist'}
         if not self.session.query(Term).filter_by(name=term_name, school_name=school_name).first():
-            return {'error': 'Term does not exist'}
+            return {'error': f'Term {term_name} does not exist'}
         
         student_ligations = self.session.query(LigationsOrder).filter_by(school_name=school_name, term_name=term_name).all()
         return {'studentLigations' : student_ligations}
