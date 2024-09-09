@@ -207,7 +207,11 @@ class DataBase:
         self.session.close()
 
     def reset_table(self, table_name):
-        """Delete all rows in the specified table."""
+        """
+        Delete all rows in the specified table.
+        Does not delete the table itself or change the schema.
+        
+        """
         try:
             # Mapping table names to SQLAlchemy models
             table_map = {

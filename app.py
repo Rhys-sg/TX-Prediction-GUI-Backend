@@ -222,6 +222,11 @@ def get_valid_domain():
 def reset_database():
     """
     FOR TESTING PURPOSES ONLY.
+
+    Resets the database by deleting all rows from all tables.
+    - Does not delete the tables themselves or change the schema.
+    - I can only delete tables and reset the schema by dropping the database and recreating it (in render)
+
     """
     # Delete rows from all tables
     db.reset_table('schools')
