@@ -197,15 +197,6 @@ def get_valid_domain():
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    
-    # DO NOT KEEP
-    db.delete_all_tables()
-    db.reset_table('schools')
-    db.reset_table('terms')
-    db.reset_table('ligations_orders')
-    db.reset_table('accounts')
-    db.reset_table('observations')
-    # DO NOT KEEP
 
     populate_schools()
     app.run(host='0.0.0.0', port=1000)
