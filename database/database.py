@@ -154,11 +154,11 @@ class DataBase:
 
         # Check if the account already exists
         if self.query_account_by_email(email):
-            return 'TEST: Account already exists'
+            return 'Account already exists'
         
         # Check if the domain is valid
         if not school_name:
-            return f'TEST: E-mail must have a valid domain.\n Current school_name: {school_name}.\n Current Domain: {domain}.\n Schools: {self.query_schools()}.\n Domains: {self.query_domains()}.'
+            return f'E-mail must have a valid domain.'
         
         try:
             new_account = Account(email=email, school_name=school_name, first_name=first_name, last_name=last_name, password=hashed_password)
