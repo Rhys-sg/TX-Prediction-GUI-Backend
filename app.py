@@ -197,7 +197,6 @@ def get_valid_domain():
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    ensure_school_name_column()
     
     # DO NOT KEEP
     db.delete_all_tables()
