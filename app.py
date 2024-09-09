@@ -230,7 +230,7 @@ def reset_database():
     """
     # Not sure which one works
 
-    db.delete_all_rows()
+    db.reset_table()
 
     db.reset_table('schools')
     db.reset_table('terms')
