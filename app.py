@@ -61,8 +61,18 @@ db = DataBase(os.getenv('DATABASE_URL'))
 # Connect to the database engine
 engine = create_engine(os.getenv('DATABASE_URL'))
 
-# Populates the schools table in the database with the domains in domains.txt
 def populate_schools():
+    """
+    Populates the schools table and terms table in the database with data from schools_terms.xlsx.
+
+    schools_terms.xlsx has two sheets:
+    1. schools: Contains school names and domains.
+    2. terms: Contains terms assigned to each school (columns automatically generated based on schools up to column Z).
+
+    Raises:
+        ValueError: If a school is present, but has no terms.
+
+    """
     schools_df = pd.read_excel('schools_terms.xlsx', sheet_name='schools')
     terms_df = pd.read_excel('schools_terms.xlsx', sheet_name='terms')
     for index, row in schools_df.iterrows():
