@@ -205,23 +205,6 @@ class DataBase:
 
     def close(self):
         self.session.close()
-    
-    def delete_all_rows(self, model):
-        try:
-            self.session.query(model).delete()
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-        finally:
-            self.session.close()
-
-    def delete_all_tables(self):
-        models = [School, Term, LigationsOrder, Account, Observation]
-        try:
-            for model in models:
-                self.delete_all_rows(model)
-        except Exception as e:
-            print(f"Error occurred while clearing tables: {e}")
 
     def reset_table(self, table_name):
         """Delete all rows in the specified table."""

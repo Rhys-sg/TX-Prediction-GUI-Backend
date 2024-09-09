@@ -208,17 +208,21 @@ def get_valid_domain():
         return jsonify({'connection': True, 'domains': domains})
     except Exception as e:
         return jsonify({'error': str(e)})
+    
+def reset_database():
+    """
+    FOR TESTING PURPOSES ONLY.
+    """
+    # Delete rows from all tables
+    db.reset_table('schools')
+    db.reset_table('terms')
+    db.reset_table('ligations_orders')
+    db.reset_table('accounts')
+    db.reset_table('observations')
 
 if __name__ == '__main__':
     
-    # DO NOT KEEP
-    db.delete_all_tables()
-    # db.reset_table('schools')
-    # db.reset_table('terms')
-    # db.reset_table('ligations_orders')
-    # db.reset_table('accounts')
-    # db.reset_table('observations')
-    # DO NOT KEEP
+    reset_database()
 
     populate_schools()
     app.run(host='0.0.0.0', port=1000)
