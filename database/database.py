@@ -144,7 +144,7 @@ class DataBase:
         
         # Check if the domain is valid
         if not school_name:
-            return 'TEST: E-mail must have a valid domain'
+            return f'TEST: E-mail must have a valid domain. Schools: {self.query_schools()}. Domains: {self.query_domains()}'
         
         try:
             new_account = Account(email=email, school_name=school_name, first_name=first_name, last_name=last_name, password=hashed_password)
