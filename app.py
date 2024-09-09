@@ -228,9 +228,6 @@ def reset_database():
     - I can only delete tables and reset the schema by dropping the database and recreating it (in render)
 
     """
-    # Not sure which one works
-
-    db.reset_table()
 
     db.reset_table('schools')
     db.reset_table('terms')
@@ -240,7 +237,7 @@ def reset_database():
 
 if __name__ == '__main__':
     
-    reset_database()
+    # reset_database()
 
     populate_schools()
     app.run(host='0.0.0.0', port=1000)
