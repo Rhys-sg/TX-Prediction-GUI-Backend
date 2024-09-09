@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 def predict(seq, model):
-    # Calculated using linear regression between predicted values and log(relative fluorescence)
+    # Calculated using linear regression between predicted values and log(relative fluorescence) values
     slope = -17.52
     intercept = 23.44
 
