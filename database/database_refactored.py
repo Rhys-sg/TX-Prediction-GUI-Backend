@@ -216,30 +216,3 @@ class DataBase:
 
     def close(self):
         self.session.close()
-
-    def reset_table(self, table_name):
-        """Delete all rows in the specified table."""
-        try:
-            table_map = {
-                'schools': School,
-                'terms': Term,
-                'ligation_orders': LigationsOrder,
-                'accounts': Account,
-                'observations': Observation
-            }
-            model = table_map.get(table_name)
-            if not model:
-                raise ValueError(f"Table '{table_name}' does not exist.")
-            self.delete_all_rows(model)
-            print(f"Table '{table_name}' has been reset.")
-        except Exception as e:
-            print(f"Error occurred while resetting table '{table_name}': {e}")
-
-    def delete_all_rows(self, model):
-        """Delete all rows from the specified model."""
-        try:
-            self.session.query(model).delete()
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            print(f"Failed to delete rows: {e}")

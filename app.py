@@ -219,26 +219,7 @@ def get_valid_domain():
     except Exception as e:
         return jsonify({'error': str(e)})
     
-def reset_database():
-    """
-    FOR TESTING PURPOSES ONLY.
-
-    Resets the database by deleting all rows from all tables.
-    - Does not delete the tables themselves or change the schema.
-    - I can only delete tables and reset the schema by dropping the database and recreating it (in render)
-
-    """
-    db.delete_all_tables()
-    
-    db.reset_table('schools')
-    db.reset_table('terms')
-    db.reset_table('ligations_orders')
-    db.reset_table('accounts')
-    db.reset_table('observations')
 
 if __name__ == '__main__':
-    
-    # reset_database()
-
     populate_schools()
     app.run(host='0.0.0.0', port=1000)
