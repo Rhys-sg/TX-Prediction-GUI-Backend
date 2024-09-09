@@ -63,9 +63,22 @@ engine = create_engine(os.getenv('DATABASE_URL'))
 
 # Populates the schools table in the database with the domains in domains.txt
 def populate_schools():
-    schools = pd.read_csv('schools.csv')
-    for index, row in schools.iterrows():
-        db.insert_school(row['name'].strip(), row['domain'].strip())
+    schools_df = pd.read_excel('schools_terms.xlsx', sheet_name='schools')
+    terms_df = pd.read_excel('schools_terms.xlsx', sheet_name='terms')
+    for index, row in schools_df.iterrows():
+        school_name = row['name'].strip()
+        school_domain = row['domain'].strip()
+
+        # Check if terms are assigned to school in terms table of schools_terms.xlsx
+        if terms_df[school_name].isnull().all():
+            raise ValueError(f"Terms for {school_name} are missing.")
+        
+        # Insert school
+        db.insert_school(school_name, school_domain)
+
+        # Insert all terms for the school
+        for term_namne in terms_df[school_name]:
+            db.insert_term(term_namne, school_name)
 
 # Makes prediction based on promoter sequence
 @app.route('/get_prediction', methods=['POST'])
