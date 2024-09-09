@@ -179,7 +179,7 @@ def get_complement(seq):
 def query_simulated_ligation():
     try:
         data = request.get_json()
-        return jsonify({'studentLigations': db.query_ligation_orders_by_school_and_term(data['school'], data['term'])})
+        return jsonify(db.query_ligation_orders_by_school_and_term(data['school'], data['term']))
     except Exception as e:
         return jsonify({'error': str(e)})
 
