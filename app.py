@@ -167,7 +167,7 @@ def handle_signup():
         data = request.get_json()
         error = db.insert_account(
             data['email'],
-            db.query_school_by_domain(data['domain']),
+            data['domain'],
             data['firstName'],
             data['lastName'],
             data['password']
