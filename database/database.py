@@ -219,12 +219,3 @@ class DataBase:
 
     def close(self):
         self.session.close()
-    
-    def delete_all_rows(self, model):
-        try:
-            self.session.query(model).delete()
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-        finally:
-            self.session.close()

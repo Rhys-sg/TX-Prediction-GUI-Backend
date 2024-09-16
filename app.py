@@ -222,5 +222,4 @@ def get_valid_domain():
 
 if __name__ == '__main__':
     populate_schools()
-    db.delete_all_rows('observations')
     app.run(host='0.0.0.0', port=1000)
