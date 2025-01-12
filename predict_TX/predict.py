@@ -3,8 +3,8 @@ import pandas as pd
 
 def predict(seq, model):
     # Calculated using linear regression between predicted values and log(relative fluorescence) values
-    slope = -17.52
-    intercept = 23.44
+    slope = 20.01
+    intercept = 4.78
 
     full_seq = get_full_seq(seq, model)
     encoded_seq = one_hot_encode(full_seq)
