@@ -164,7 +164,7 @@ def insert_simulated_ligation():
             data['school'],
             data['term'],
             data['orderName'] + '_coding',
-            data['sequence'],
+            'CGAC' + data['sequence'],
             datetime.now().date().strftime('%Y-%m-%d'),
             data['students']
         )
@@ -172,7 +172,7 @@ def insert_simulated_ligation():
             data['school'],
             data['term'],
             data['orderName'] + '_template',
-            get_complement(data['sequence']),
+            'CCGC' + get_reverse_complement(data['sequence']),
             datetime.now().date().strftime('%Y-%m-%d'),
             data['students']
         )
@@ -180,9 +180,9 @@ def insert_simulated_ligation():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-def get_complement(seq):
+def get_reverse_complement(seq):
     mapping = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
-    return ''.join(mapping[char] for char in seq)
+    return ''.join(mapping[char] for char in seq)[::-1]
 
 # Queries simulated ligations
 @app.route('/query_simulated_ligation', methods=['POST'])
