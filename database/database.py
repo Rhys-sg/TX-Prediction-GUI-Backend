@@ -198,7 +198,7 @@ class DataBase:
 
         observations = (
             self.session.query(Observation.sequence, Observation.observed_TX)
-            .join(LigationsOrder, Observation.sequence == LigationsOrder.sequence)
+            .join(LigationsOrder, Observation.sequence == 'CGAC' + LigationsOrder.sequence)
             .filter(
                 LigationsOrder.school_name == school_name,
                 LigationsOrder.term_name == term_name
