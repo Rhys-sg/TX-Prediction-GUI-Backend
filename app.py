@@ -145,6 +145,16 @@ def query_Observed_TX():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+# Queries for student observations (sequence and expression) based on school and term
+@app.route('/query_observations_by_school_and_term', methods=['POST'])
+def query_observations_by_school_and_term():
+    try:
+        data = request.get_json()
+        student_observations = db.query_observations_by_school_and_term(data['school'], data['term'])
+        return jsonify({'student_observations': student_observations})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
 # Adds new student ligation to the database
 @app.route('/insert_simulated_ligation', methods=['POST'])
 def insert_simulated_ligation():

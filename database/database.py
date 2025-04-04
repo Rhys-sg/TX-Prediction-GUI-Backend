@@ -1,6 +1,6 @@
-from sqlalchemy import create_engine, Column, String, Integer, Text, ForeignKey
+from sqlalchemy import create_engine, Column, String, Integer, Text, ForeignKey, and_
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, joinedload
 from sqlalchemy.sql import func
 import bcrypt
 
@@ -191,6 +191,22 @@ class DataBase:
         sequence = sequence.lower()
         result = self.session.query(func.avg(Observation.observed_TX)).filter_by(sequence=sequence).scalar()
         return result
+    
+    def query_observations_by_school_and_term(self, school_name, term_name):
+        school_name = school_name.lower()
+        term_name = term_name.lower()
+
+        observations = (
+            self.session.query(Observation.sequence, Observation.observed_TX)
+            .join(LigationsOrder, Observation.sequence == LigationsOrder.sequence)
+            .filter(
+                LigationsOrder.school_name == school_name,
+                LigationsOrder.term_name == term_name
+            )
+            .all()
+        )
+
+        return observations
 
     def query_accounts(self):
         return self.session.query(Account.email, Account.password).all()
