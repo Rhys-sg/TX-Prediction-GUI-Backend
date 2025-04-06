@@ -46,6 +46,8 @@ class Observation(Base):
 
     sequence = Column(Text, primary_key=True)
     account_email = Column(String, ForeignKey('accounts.email'))
+    school_name = Column(String, ForeignKey('schools.name'), nullable=False)
+    term_name = Column(String, ForeignKey('terms.name'), primary_key=True, nullable=False)
     observed_TX = Column(Integer)
     students = Column(Text)
     notes = Column(Text)
@@ -169,13 +171,22 @@ class DataBase:
             self.session.rollback()
             return f'An exception occurred, {str(e)}'
 
-    def insert_observation(self, sequence, account_email, observed_TX, students, notes, date):
+    def insert_observation(self, sequence, account_email, school_name, term_name, observed_TX, students, notes, date):
         sequence = sequence.lower()
         account_email = account_email.lower()
         students = students.lower()
         notes = notes.lower()
         try:
-            new_observation = Observation(sequence=sequence, account_email=account_email, observed_TX=observed_TX, students=students, notes=notes, date=date)
+            new_observation = Observation(
+                sequence=sequence,
+                account_email=account_email,
+                school_name=school_name,
+                term_name=term_name,
+                observed_TX=observed_TX,
+                students=students,
+                notes=notes,
+                date=date
+            )
             self.session.add(new_observation)
             self.session.commit()
             return True

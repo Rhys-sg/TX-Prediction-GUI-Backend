@@ -125,12 +125,13 @@ def insert_observed_TX():
         success = db.insert_observation(
             data['codingStrand'],
             data['account_email'],
+            data['school'],
+            data['term'],
             data['observed_TX'],
             data['students'],
             data['notes'],
             datetime.now().date().strftime('%Y-%m-%d')
         )
-        print(f"Observed: {data['observed_TX']}")
         return jsonify({'success': success})
     except Exception as e:
         return jsonify({'error': str(e)})
