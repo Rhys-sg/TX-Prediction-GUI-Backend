@@ -162,12 +162,13 @@ def get_student_observations_graph_data():
     try:
         data = request.get_json()
         student_observations = db.query_observations_by_school_and_term(data['school'], data['term'])
-        data = {
-            'x': [predict(obs['Sequence'].Upper(), model) for obs in student_observations],
-            'y': [obs['Observed TX'] for obs in student_observations],
-            'label': [obs['Sequence'] for obs in student_observations]
-        }
-
+        data = []
+        for obs in student_observations:
+            data.append({
+                'x': predict(obs['Sequence'].Upper(), model),
+                'y': obs['Observed TX'],
+                'label': obs['Sequence']
+            })
         return jsonify({'data': data})
     except Exception as e:
         return jsonify({'error': str(e)})
