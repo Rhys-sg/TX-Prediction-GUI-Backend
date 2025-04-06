@@ -146,13 +146,29 @@ def query_Observed_TX():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-# Queries for student observations (sequence and expression) based on school and term
+# Queries for student observations (date, notes, observed TX, sequence, students) based on school and term
 @app.route('/query_observations_by_school_and_term', methods=['POST'])
 def query_observations_by_school_and_term():
     try:
         data = request.get_json()
         student_observations = db.query_observations_by_school_and_term(data['school'], data['term'])
         return jsonify({'student_observations': student_observations})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+# Gets data for student observations graph based on school and term, preprocessed for frontend
+@app.route('/get_student_observations_graph_data', methods=['POST'])
+def get_student_observations_graph_data():
+    try:
+        data = request.get_json()
+        student_observations = db.query_observations_by_school_and_term(data['school'], data['term'])
+        data = {
+            'x': [predict(obs['Sequence'].Upper(), model) for obs in student_observations],
+            'y': [obs['Observed TX'] for obs in student_observations],
+            'label': [obs['Sequence'] for obs in student_observations]
+        }
+
+        return jsonify({'data': data})
     except Exception as e:
         return jsonify({'error': str(e)})
 
