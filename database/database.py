@@ -207,15 +207,17 @@ class DataBase:
         school_name = school_name.lower()
         term_name = term_name.lower()
 
-        observations = (
-            self.session.query(Observation.sequence, Observation.observed_TX)
-            .join(LigationsOrder, Observation.sequence == 'CGAC' + LigationsOrder.sequence)
-            .filter(
-                LigationsOrder.school_name == school_name,
-                LigationsOrder.term_name == term_name
-            )
-            .all()
-        )
+        observations = self.session.query(Observation).filter_by(school_name=school_name, term_name=term_name).all()
+        observations = [
+            {
+                'Sequence': observation.sequence,
+                'Observed TX': observation.observed_TX,
+                'Students': observation.students,
+                'Notes': observation.notes,
+                'Date': observation.date
+            }
+            for observation in observations
+        ]
 
         return observations
 
