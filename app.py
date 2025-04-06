@@ -171,8 +171,8 @@ def get_student_observations_graph_data():
             })
         return jsonify({
             'label': 'Student Observations',
-            'xAxisTitle': 'Predicted Sequence',
-            'yAxisTitle': 'Observed TX',
+            'xAxisTitle': 'Predicted Relative Fluorescence',
+            'yAxisTitle': 'Observed Relative Fluorescence',
             'data': graph_data
         })
     except Exception as e:
