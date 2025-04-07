@@ -167,7 +167,7 @@ def get_student_observations_graph_data():
             graph_data.append({
                 'x': predict(obs['Sequence'].upper(), model),
                 'y': obs['Observed TX'],
-                'label': obs['notes']
+                'label': obs['Notes']
             })
         return jsonify({
             'label': 'Student Observations',
