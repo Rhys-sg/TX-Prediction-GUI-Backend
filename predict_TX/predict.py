@@ -22,6 +22,4 @@ def one_hot_encode(sequence):
     return np.array([encoding])
 
 def convert_prediction_to_fluorescence(prediction, slope, intercept):
-    log_relative_fluorescence = slope * prediction + intercept
-    relative_fluorescence = np.power(log_relative_fluorescence, 10)
-    return relative_fluorescence
+    return slope * prediction + intercept
