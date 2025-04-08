@@ -22,4 +22,4 @@ def one_hot_encode(sequence):
     return np.array([encoding])
 
 def convert_prediction_to_fluorescence(prediction, slope, intercept):
-    return slope * prediction + intercept
+    return max(slope * prediction + intercept, 50001)
