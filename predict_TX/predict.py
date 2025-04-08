@@ -3,8 +3,8 @@ import pandas as pd
 
 def predict(seq, model):
     # Calculated using linear regression between predicted values and log(relative fluorescence) values
-    slope = 20.01
-    intercept = 4.78
+    slope = 19828034
+    intercept = -7102957
 
     full_seq = get_full_seq(seq, model)
     encoded_seq = one_hot_encode(full_seq)
@@ -23,5 +23,5 @@ def one_hot_encode(sequence):
 
 def convert_prediction_to_fluorescence(prediction, slope, intercept):
     log_relative_fluorescence = slope * prediction + intercept
-    relative_fluorescence = np.exp(log_relative_fluorescence)
+    relative_fluorescence = np.power(log_relative_fluorescence, 10)
     return relative_fluorescence
