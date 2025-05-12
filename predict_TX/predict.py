@@ -11,7 +11,7 @@ def predict(seq, model):
     prediction = model.predict(encoded_seq)[0][0]
 
     log_Rel_RFP = slope * prediction + intercept
-    Rel_RFP = 10 ** log_Rel_RFP
+    Rel_RFP = int(10 ** log_Rel_RFP)
 
     return max(Rel_RFP, 50001)
 
