@@ -254,5 +254,4 @@ def get_valid_domain():
 
 if __name__ == '__main__':
     populate_schools()
-    update_db()
     app.run(host='0.0.0.0', port=1000)
