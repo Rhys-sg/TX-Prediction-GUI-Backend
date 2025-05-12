@@ -223,6 +223,11 @@ class DataBase:
         return observations
     
     def replace_observations_from_df(self, df, school_name, term_name):
+
+        account_email = df['account_email'].iloc[0].lower()
+        if not self.query_account_by_email(account_email):
+            return False
+        
         school_name = school_name.lower()
         term_name = term_name.lower()
 
@@ -255,7 +260,6 @@ class DataBase:
             self.session.rollback()
             print(f"Error replacing observations: {e}")
             return False
-
 
     def query_accounts(self):
         return self.session.query(Account.email, Account.password).all()

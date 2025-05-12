@@ -103,7 +103,7 @@ def update_db():
 
     df['account_email'] = 'sorensor@whitman.edu'
     df['students'] = ''
-    df['notes'] = 'Average RFP in M9 media'
+    df['notes'] = df['Description'].apply(lambda x: x + 'Average RFP in M9 media')
     df['date'] = datetime.now().strftime('%Y-%m-%d')
 
     school_name = 'Whitman'
