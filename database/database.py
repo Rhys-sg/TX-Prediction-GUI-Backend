@@ -222,6 +222,41 @@ class DataBase:
 
         return observations
     
+    def replace_observations_from_df(self, df, school_name, term_name):
+        school_name = school_name.lower()
+        term_name = term_name.lower()
+
+        try:
+            # Delete existing observations for the given school and term
+            self.session.query(Observation).filter(
+                and_(
+                    Observation.school_name == school_name,
+                    Observation.term_name == term_name
+                )
+            ).delete(synchronize_session=False)
+
+            # Insert new observations from the DataFrame
+            for _, row in df.iterrows():
+                new_observation = Observation(
+                    sequence=row['sequence'].lower(),
+                    account_email=row['account_email'].lower(),
+                    school_name=school_name,
+                    term_name=term_name,
+                    observed_TX=int(row['observed_TX']) if pd.notnull(row['observed_TX']) else None,
+                    students=row['students'].lower() if pd.notnull(row['students']) else '',
+                    notes=row['notes'].lower() if pd.notnull(row['notes']) else '',
+                    date=row['date']
+                )
+                self.session.add(new_observation)
+
+            self.session.commit()
+            return True
+        except Exception as e:
+            self.session.rollback()
+            print(f"Error replacing observations: {e}")
+            return False
+
+
     def query_accounts(self):
         return self.session.query(Account.email, Account.password).all()
     

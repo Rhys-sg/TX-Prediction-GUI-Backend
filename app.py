@@ -90,6 +90,27 @@ def populate_schools():
         for term_namne in terms_df[school_name]:
             db.insert_term(term_namne, school_name)
 
+# Reads the Observed_RFP_GFP.txt and Sequences.txt files, and updates the observed TX database
+def update_db():
+    df = pd.read_table('observed_data/Observed_RFP_GFP.txt')
+    seq_map= pd.read_table('observed_data/Sequences.txt')
+
+    df.loc[:, 'Ec'] = df['Ec'].astype(int)
+    seq_map.loc[:, 'Ec'] = seq_map['Ec'].astype(int)
+    df = df.merge(seq_map, on='Ec', how='left')
+
+    df = df.rename(columns={'Rel_RFP': 'observed_TX'})
+
+    df['account_email'] = 'sorensor@whitman.edu'
+    df['students'] = ''
+    df['notes'] = 'Average RFP in M9 media'
+    df['date'] = datetime.now().strftime('%Y-%m-%d')
+
+    school_name = 'Whitman'
+    term_name = 'Spring 24'
+
+    db.replace_observations_from_df(df, school_name, term_name)
+
 # Makes prediction based on promoter sequence
 @app.route('/get_prediction', methods=['POST'])
 def get_prediction():
@@ -254,4 +275,5 @@ def get_valid_domain():
 
 if __name__ == '__main__':
     populate_schools()
+    update_db()
     app.run(host='0.0.0.0', port=1000)
